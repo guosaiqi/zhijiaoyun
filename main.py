@@ -5,7 +5,9 @@ import urllib3
 import time
 
 urllib3.disable_warnings()
-print('请先在main.py中 login函数输入对应账号密码！！！亲')
+print('提示：请先在main.py中login函数输入对应账号密码哦')
+print('如填写 请忽略')
+
 url = 'https://zjy2.icve.com.cn/portal/login.html'
 
 login_url = 'https://zjy2.icve.com.cn/api/common/login/login'
@@ -229,13 +231,30 @@ def get_view_directory(courseOpenId, openClassId, cellId, module_id):
     res = session.post(view_directory_url, params=params, verify=False)
     time.sleep(1)
     if res.json()['code'] == -100 or res.json()['code'] == '-100':
-        # 这里可能就是请求太多了
-        # 过段时间就可以使用了  一二十分钟 
-        print('文件信息获取错误！')
-        print('等待几分钟后尝试...')
-        exit()
+        #print('有两们课程 1数学 2语文')
+        #print('假如你目前正学习数学 但只学习80%')
+        #print('你去点观看 另一门 '语文' 另一门课 注意 是另一门课')
+        #print('然后你在进入view_dectory页面时 会提示你 上次课件进度多少 你这次选择的进度多少')
+        #print('需要你选择 所以代码进入是code会变为-100 你需要请求另一个地址转化一下  抓包得到 fidder 谷歌浏览器抓不到(好像有其他几个地址也是)')
+        #print('code=-100')
+        changeCellData(courseOpenId, openClassId, module_id, cellId, cellName)
+        res1 = get_view_directory(courseOpenId, openClassId, cellId, module_id, cellName)
+        return res1
         
     return res.json()
+
+def changeCellData(courseOpenId, openClassId, moduleId, cellId, cellName):
+    url = 'https://zjy2.icve.com.cn/api/common/Directory/changeStuStudyProcessCellData'
+    
+    data = {
+        'courseOpenId': courseOpenId,
+        'openClassId': openClassId,
+        'moduleId': moduleId,
+        'cellId': cellId,
+        'cellName': cellName
+    }
+    
+    session.post(url, data=data, verify=False)
 
 def add_view_content(courseOpenId, openClassId, cellId, cellName):
     url = 'https://zjy2.icve.com.cn/api/common/Directory/addCellActivity'
