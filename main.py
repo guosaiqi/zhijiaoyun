@@ -349,7 +349,10 @@ def video(courseOpenId, openClassId, cellId, cellLogId, stuStudyNewlyTime, audio
         else:
             print('Warning 视频时间增加出错')
             exit()
-
+            
+        if addPercent >= audioVideoLong:
+            break
+            
         time.sleep(15)
 
 def ppt(courseOpenId, openClassId, cellId, cellLogId, pageCount):
