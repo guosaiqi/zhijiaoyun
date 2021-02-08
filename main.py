@@ -314,20 +314,23 @@ def video(courseOpenId, openClassId, cellId, cellLogId, stuStudyNewlyTime, audio
         刷视频
         通过抓包分析, 网页观看视频就是隔断时间对这个地址发送请求
         studyNewlyTime就是当前视频播放的进度数
-        我设置的是15秒发送一次请求
+        我设置的是10秒发送一次请求 谷歌抓包发现也是10秒
         Notice：
-            发送间隔为15秒, 所以当前视频播放的进度数与上次发送的进度数相减<15, 不然嗝屁, 会封该课件--也没多久
+            发送间隔为10秒, 所以当前视频播放的进度数与上次发送的进度数相减约等于10, 不然嗝屁, 会封该课件--也没多久
     '''
     url = 'https://zjy2.icve.com.cn/api/common/Directory/stuProcessCellLog'
 
-    forNum = int((audioVideoLong - stuStudyNewlyTime) / 14) # 循环次数 总视频长度-观看过后的长度分14段 每段循环后会加14点几
+    forNum = int((audioVideoLong - stuStudyNewlyTime) / 10) # 循环次数 总视频长度-观看过后的长度分10段 每段循环后会加10.多
     for i in range(forNum):
-        addPercent = round(stuStudyNewlyTime-1 + (random.random() + 14)*i, 6) # 保存6为小数,  减1是因为打开网页, 网页视频播放会倒退1秒(抓包了解), 尽量真实嘛
-
-        if addPercent >= audioVideoLong: # 怕超过视频总长度, 不晓得会出啥事, 逻辑写的不好 能刷 但不是百分之百 可以修改修改
+        if stuStudyNewlyTime-1 < 0:
+            stuStudyNewlyTime = 1
+            
+        Percent = stuStudyNewlyTime-1 + 10.000001*i
+        
+        if Percent >= audioVideoLong: # 怕超过视频总长度, 不晓得会出啥事
             o = audioVideoLong
         else:
-            o = addPercent
+            o = Percent
 
         params = {
             'courseOpenId': courseOpenId,
@@ -347,10 +350,10 @@ def video(courseOpenId, openClassId, cellId, cellLogId, stuStudyNewlyTime, audio
             print('Warning 视频时间增加出错')
             exit()
             
-        if addPercent >= audioVideoLong:
+        if Percent >= audioVideoLong:
             break
             
-        time.sleep(15)
+        time.sleep(10)
 
 def ppt(courseOpenId, openClassId, cellId, cellLogId, pageCount):
     '''
