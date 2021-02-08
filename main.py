@@ -144,7 +144,7 @@ def into_course(courseList):
                 if categoryName == '视频':
                     # 进入播放页面
                     # return 当前观看信息
-                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id)
+                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id, cellName)
                     cellLogId = res['cellLogId']
                     cellLogId = 'test'
                     audioVideoLong = res['audioVideoLong']
@@ -218,8 +218,7 @@ def get_cellid(courseOpenId, openClassId, topicId):
     
     return res.json()['cellList']
 
-def get_view_directory(courseOpenId, openClassId, cellId, module_id):
-    time.sleep(1)
+def get_view_directory(courseOpenId, openClassId, cellId, module_id, cellName):
     params = {
         'courseOpenId': courseOpenId,
         'openClassId': openClassId,
