@@ -231,10 +231,7 @@ def get_view_directory(courseOpenId, openClassId, cellId, module_id):
     res = session.post(view_directory_url, params=params, verify=False)
     time.sleep(1)
     if res.json()['code'] == -100 or res.json()['code'] == '-100':
-        #print('有两们课程 1数学 2语文')
-        #print('假如你目前正学习数学 但只学习80%')
-        #print('你去点观看 另一门 '语文' 另一门课 注意 是另一门课')
-        #print('然后你在进入view_dectory页面时 会提示你 上次课件进度多少 你这次选择的进度多少')
+        #print('在你进入view_dectory页面时 会提示你 上次课件进度多少 你这次选择的进度多少')
         #print('需要你选择 所以代码进入是code会变为-100 你需要请求另一个地址转化一下  抓包得到 fidder 谷歌浏览器抓不到(好像有其他几个地址也是)')
         #print('code=-100')
         changeCellData(courseOpenId, openClassId, module_id, cellId, cellName)
