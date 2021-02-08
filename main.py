@@ -327,7 +327,7 @@ def video(courseOpenId, openClassId, cellId, cellLogId, stuStudyNewlyTime, audio
     for i in range(forNum):
         addPercent = round(stuStudyNewlyTime-1 + (random.random() + 14)*i, 6) # 保存6为小数,  减1是因为打开网页, 网页视频播放会倒退1秒(抓包了解), 尽量真实嘛
 
-        if addPercent >= audioVideoLong: # 怕超过视频总长度, 不晓得会出啥事, 所以可能视频进度可能都是99.9999999%
+        if addPercent >= audioVideoLong: # 怕超过视频总长度, 不晓得会出啥事, 逻辑写的不好 能刷 但不是百分之百 可以修改修改
             o = audioVideoLong
         else:
             o = addPercent
