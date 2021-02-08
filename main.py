@@ -157,7 +157,7 @@ def into_course(courseList):
 
                 elif categoryName == 'ppt' or  categoryName == '文档':
                     # 进入播放页面
-                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id)
+                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id, cellName)
                     cellLogId = res['cellLogId']
                     cellLogId = 'test'
                     pageCount = res['pageCount']
@@ -173,7 +173,7 @@ def into_course(courseList):
                     print('之前总学习时间：' + str(stuCellViewTime))
                     #　刷ppt
                     ppt(courseOpenId, openClassId, cellId, cellLogId, pageCount)
-                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id)
+                    res = get_view_directory(courseOpenId, openClassId, cellId, module_id, cellName)
                     stuCellViewTime = res['stuCellViewTime']
                     print('现在总文件学习时间：' +  str(stuCellViewTime))
                     add_view_content(courseOpenId, openClassId, cellId, cellName)
