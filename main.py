@@ -398,7 +398,7 @@ def video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioV
             
         nowTime = stuStudyNewlyTime-1 + 10.000001*i
         
-        if nowTime >= audioVideoLong: # 怕超过视频总长度, 不晓得会出啥事
+        if nowTime >= audioVideoLong: 
             stutyTime = audioVideoLong
         else:
             stutyTime = nowTime
@@ -445,7 +445,7 @@ def text(courseOpenId, openClassId, cellId, cellLogId, pageCount, token):
         res = session.post(url, params=params, verify=False).json()
         
         if res['code'] != 1:
-            print('Warning 视频刷课出现未知错误')
+            print('Warning ppt\文档刷课出现未知错误')
             exit()
 
         time.sleep(5)
@@ -463,7 +463,10 @@ def comment(courseOpenId, openClassId, cellId, cellName, chooseNum, starNum):
         'activityType': str(chooseNum)
     }
 
-    session.post(url, params=params, verify=False)
+    res = session.post(url, params=params, verify=False).json()
+    if res['code'] != 1:
+        print('评论间隔时间过快, 被发现了！')
+        exit()
     time.sleep(1)
 
 
