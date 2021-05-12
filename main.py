@@ -17,7 +17,7 @@ session.headers = headers
 
 def prepareWork():
     print('************************************************')
-    print('            欢迎使用本脚本                       ')
+    print('                欢迎使用本脚本                   ')
     print('            author: 热狗得小舔狗                 ')
     print('            createTime:2021-1-3                 ')
     print('            updateTime:2021-4-23                ')
@@ -123,6 +123,7 @@ def chapterInfo(course, token, sleepTime):
         # 章节进度
         # modulePercent = module['percent']
 
+        # #
         # if str(modulePercent) == '100.0':
         #     print('该章节进度100%(自动跳过)  ' + moduleName)
         #     continue
@@ -178,6 +179,8 @@ def topicInfo(listChapter, token, sleepTime):
         listTopicComment = cellInfo(listTopic, token, sleepTime)
         # 列表中对应是 所有章节 下 各文件 对应需要 评论 参数[[{}, {}, {}...],[{}, {}, {}...],[{}, {}, {}...]...]
         listChapterComment.append(listTopicComment)
+        
+        time.sleep(1)
 
     # 当文件刷完, 才会执行到该代码
     print('各文件评论开始, 需要一段时间')
@@ -216,20 +219,8 @@ def cellInfo(listTopic, token, sleepTime):
             cellId = cellList[j]['Id']
             cellName = cellList[j]['cellName']
             categoryName = cellList[j]['categoryName']
-            # stuCellPercent = cellList[j]['stuCellPercent']
-
-            # if stuCellPercent == 100:
-            #     print('         该文件进度100%(自动跳过) '+ cellName)  
-            #     continue
-            
-            dic = {
-                'courseOpenId': courseOpenId,
-                'openClassId': openClassId,
-                'cellId': cellId,
-                'moduleId': moduleId,
-                'cellName': cellName,
-                'categoryName': categoryName
-            }
+            childNodeList = cellList[j]['childNodeList']
+            stuCellPercent = cellList[j]['stuCellPercent']
 
             dicComment = {
                 'courseOpenId': courseOpenId,
@@ -237,19 +228,57 @@ def cellInfo(listTopic, token, sleepTime):
                 'cellId': cellId,
                 'cellName': cellName
             }
+            
+            number = len(childNodeList)
+            # 遍历子节点信息
+            for k  in range(number):
+                cellId = childNodeList[k]['Id']
+                cellName = childNodeList[k]['cellName']
+                stuCellPercent = childNodeList[k]['stuCellPercent']
 
-            listCell.append(dic)
+                dicComment = {
+                'courseOpenId': courseOpenId,
+                'openClassId': openClassId,
+                'cellId': cellId,
+                'cellName': cellName
+                }
+
+                if k+1 == number:
+                    break
+
+                # 添加子节点需要评论的参数
+                listCellComemnt.append(dicComment)
+
+            dic = {
+                'courseOpenId': courseOpenId,
+                'openClassId': openClassId,
+                'cellId': cellId,
+                'moduleId': moduleId,
+                'cellName': cellName,
+                'categoryName': categoryName,
+                'childNodeList': childNodeList
+            }
+
+              
             listCellComemnt.append(dicComment)
-        
+
+            # 
+            if stuCellPercent == 100:
+                print('         该文件进度100%(自动跳过) '+ cellName)  
+                continue
+
+            listCell.append(dic) 
+
         listTopicComment.append(listCellComemnt)
 
+        time.sleep(2)
         # 刷课
         doIt(listCell, token, sleepTime)
     # 子目录下个文件参数[{}, {}, {}...]
     return listTopicComment
         
 
-# 刷视频\刷ppt\文档\压缩包
+# 刷视频\刷ppt\文档\图片\压缩包
 def doIt(listCell, token, sleepTime):
     for i in range(len(listCell)):
         courseOpenId = listCell[i]['courseOpenId']
@@ -258,6 +287,7 @@ def doIt(listCell, token, sleepTime):
         moduleId = listCell[i]['moduleId']
         cellName = listCell[i]['cellName']
         categoryName = listCell[i]['categoryName']
+        childNodeList = listCell[i]['childNodeList']
         
         # 刷视频文件
         if categoryName == '视频':
@@ -271,14 +301,14 @@ def doIt(listCell, token, sleepTime):
 
             cellLogId = res['cellLogId']
             
-            print('         ' + cellName + '开始刷课  ' + '目前进度：' + str(cellPercent))
-            print('         ' + '请等待..')
+            print('           ' + cellName + '开始刷课  ' + '目前进度：' + str(cellPercent))
+            print('           ' + '请等待..')
 
             video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioVideoLong, token, sleepTime)
 
 
-        # 刷ppt\文档文件
-        elif categoryName == 'ppt' or  categoryName == '文档':
+        # 刷ppt\文档\图片文件
+        elif categoryName == 'ppt文档' or  categoryName == '文档' or  categoryName == 'ppt' or categoryName == 'office文档' or categoryName == '图片':
             res = doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName).json()
             # 文件进度
             cellPercent = res['cellPercent']
@@ -287,14 +317,39 @@ def doIt(listCell, token, sleepTime):
 
             cellLogId = res['cellLogId']
 
-            print('         ' + cellName + '开始刷课  ' + '目前进度：' + str(cellPercent))
-            print('         ' + '请等待..')
+            print('           ' + cellName + '开始刷课  ' + '目前进度：' + str(cellPercent))
+            print('           ' + '请等待..')
 
             text(courseOpenId, openClassId, cellId, cellLogId, pageCount, token)
+        
+        # 刷子节点下面的视频\文档
+        elif categoryName == '子节点':
+            listChildCell = []
+            print('        ' + cellName + ':')
+
+            for j in range(len(childNodeList)):
+                cellId = childNodeList[j]['Id']
+                cellName = childNodeList[j]['cellName']
+                categoryName = childNodeList[j]['categoryName']
+
+                dic = {
+                'courseOpenId': courseOpenId,
+                'openClassId': openClassId,
+                'cellId': cellId,
+                'moduleId': moduleId,
+                'cellName': cellName,
+                'categoryName': categoryName,
+                'childNodeList': []
+                }
+
+                listChildCell.append(dic)  
+            doIt(listChildCell, token, sleepTime)
+
+
 
         elif categoryName == '压缩包':
-            print('         ' + cellName + '压缩包开始')
-            print('         ' + '请等待..')
+            print('           ' + cellName + '压缩包开始')
+            print('           ' + '请等待..')
 
             doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName)
 
@@ -302,6 +357,10 @@ def doIt(listCell, token, sleepTime):
         else:
             print('         Warning:{}-文件无法实现'.format(cellName))
             continue
+        
+        time.sleep(2)
+
+    time.sleep(1)
 
 # 评论
 def doComment(listChapterComment):
@@ -457,7 +516,7 @@ def comment(courseOpenId, openClassId, cellId, cellName, chooseNum, starNum):
         'courseOpenId': courseOpenId,
         'openClassId': openClassId,
         'cellId': cellId,
-        'content': '{}'.format(random.choice(['无', '非常好', '好', '结构紧凑', '内容详细'])),
+        'content': '{}'.format(random.choice(['无', '非常好', '好', '结构紧凑', '内容详细', '讲的不错，都明白了，点赞！', '此课程讲的非常好。'])),
         'docJson': '',
         'star': str(starNum),
         'activityType': str(chooseNum)
