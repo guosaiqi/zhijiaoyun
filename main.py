@@ -40,7 +40,9 @@ def prepareWork():
         print('输入错误, 按照正常速度播放')
         sleepTime = 10
 
-    return userName, passWord, sleepTime
+    needPinglun = int(input('是否需要评论:1.需要  2.不需要  '))
+
+    return userName, passWord, sleepTime, needPinglun
 
 # 获取cookie参数  acw_tc
 def getCookie_acw_tc():
@@ -61,9 +63,8 @@ def download_code():
         f.write(img)
 
 # 登录
-def login(userName, passWord, sleepTime):
+def login(userName, passWord, sleepTime, needPinglun):
     verifyCode = input("请输入验证码:")
-
 
     url = 'https://zjy2.icve.com.cn/api/common/login/login'
 
@@ -82,10 +83,10 @@ def login(userName, passWord, sleepTime):
 
     token = res['token']
 
-    choose_course(token, sleepTime)
+    choose_course(token, sleepTime, needPinglun)
 
 # 选择需要刷的课程
-def choose_course(token, sleepTime):
+def choose_course(token, sleepTime, needPinglun):
     url = 'https://zjy2.icve.com.cn/api/student/learning/getLearnningCourseList'
 
     res = session.post(url, verify=False)
@@ -102,10 +103,10 @@ def choose_course(token, sleepTime):
     # 被刷课程信息
     course = courseList[i]
 
-    chapterInfo(course, token, sleepTime)
+    chapterInfo(course, token, sleepTime, needPinglun)
 
 # 章节信息
-def chapterInfo(course, token, sleepTime):
+def chapterInfo(course, token, sleepTime, needPinglun):
     # 所需参数
     courseOpenId = course['courseOpenId']
     openClassId = course['openClassId']
@@ -123,11 +124,6 @@ def chapterInfo(course, token, sleepTime):
         # 章节进度
         # modulePercent = module['percent']
 
-        # #
-        # if str(modulePercent) == '100.0':
-        #     print('该章节进度100%(自动跳过)  ' + moduleName)
-        #     continue
-
         dic = {
             'courseOpenId': courseOpenId,
             'openClassId': openClassId,
@@ -138,10 +134,10 @@ def chapterInfo(course, token, sleepTime):
         # 在存入列表中传递
         listChapter.append(dic)
     
-    topicInfo(listChapter, token, sleepTime)
+    topicInfo(listChapter, token, sleepTime, needPinglun)
          
 # 章节下面一级子目录信息
-def topicInfo(listChapter, token, sleepTime):
+def topicInfo(listChapter, token, sleepTime, needPinglun):
     url = 'https://zjy2.icve.com.cn/api/study/process/getTopicByModuleId'
     listChapterComment = []
 
@@ -182,10 +178,11 @@ def topicInfo(listChapter, token, sleepTime):
         
         time.sleep(1)
 
-    # 当文件刷完, 才会执行到该代码
-    print('各文件评论开始, 需要一段时间')
-    print('请等待..')
-    doComment(listChapterComment)
+    if needPinglun == 1:
+        # 当文件刷完, 才会执行到该代码
+        print('各文件评论开始, 需要一段时间')
+        print('请等待..')
+        doComment(listChapterComment)
 
 
 # 要刷文件信息
@@ -530,12 +527,12 @@ def comment(courseOpenId, openClassId, cellId, cellName, chooseNum, starNum):
 
 
 if __name__ == "__main__":
-    userName, passWord, sleepTime = prepareWork()
+    userName, passWord, sleepTime, needPinglun= prepareWork()
 
     getCookie_acw_tc()
 
     download_code()
 
-    login(userName, passWord, sleepTime)
+    login(userName, passWord, sleepTime, needPinglun)
 
     print('该课程以完成 谢谢使用！')
