@@ -316,8 +316,8 @@ def doIt(listCell, token):
 
 
 
-        elif categoryName == '压缩包':
-            print('           文件：' + cellName[:10] + '.., 压缩包')
+        elif categoryName == '压缩包' or categoryName == 'swf' or categoryName == '链接':
+            print('           文件：' + cellName[:10] + '.., 压缩包/swf文件/链接文件')
             print('           ' + '请等待..')
 
             doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName)
