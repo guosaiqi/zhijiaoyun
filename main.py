@@ -27,29 +27,15 @@ def prepareWork():
     userName = input('请输入用户名:')
     passWord = input('请输入密  码:')
 
-    speed = int(input('请选择刷视频速度:1.正常  2.二倍  3. 五倍  4.十倍  '))
-    if speed == 1:
-        sleepTime = 10
-    elif speed == 2:
-        sleepTime = 5
-    elif speed == 3:
-        sleepTime = 2
-    elif speed == 4:
-        sleepTime = 1
-    else:
-        print('输入错误, 按照正常速度播放')
-        sleepTime = 10
-
     needPinglun = int(input('是否需要评论:1.需要  2.不需要  '))
 
-    return userName, passWord, sleepTime, needPinglun
+    return userName, passWord, needPinglun
 
-# 获取cookie参数  acw_tc
 def getCookie_acw_tc():
     url = 'https://zjy2.icve.com.cn/portal/login.html'
     session.get(url, verify=False)
 
-# 下载验证码到本件夹下
+
 def download_code():
     r = random.random()
     
@@ -62,8 +48,8 @@ def download_code():
     with open('verifycode.png', 'wb') as f:
         f.write(img)
 
-# 登录
-def login(userName, passWord, sleepTime, needPinglun):
+
+def login(userName, passWord,  needPinglun):
     verifyCode = input("请输入验证码:")
 
     url = 'https://zjy2.icve.com.cn/api/common/login/login'
@@ -83,14 +69,14 @@ def login(userName, passWord, sleepTime, needPinglun):
 
     token = res['token']
 
-    choose_course(token, sleepTime, needPinglun)
+    choose_course(token, needPinglun)
 
 # 选择需要刷的课程
-def choose_course(token, sleepTime, needPinglun):
+def choose_course(token, needPinglun):
     url = 'https://zjy2.icve.com.cn/api/student/learning/getLearnningCourseList'
 
     res = session.post(url, verify=False)
-    # 课程信息
+    
     courseList = res.json()['courseList']
 
     for i in range(len(courseList)):
@@ -100,14 +86,13 @@ def choose_course(token, sleepTime, needPinglun):
         print(str(i+1) +'   '+ courseName)
 
     i = int(input('请选择你要刷的课程：')) - 1
-    # 被刷课程信息
+    
     course = courseList[i]
 
-    chapterInfo(course, token, sleepTime, needPinglun)
+    chapterInfo(course, token, needPinglun)
 
-# 章节信息
-def chapterInfo(course, token, sleepTime, needPinglun):
-    # 所需参数
+def chapterInfo(course, token, needPinglun):
+    
     courseOpenId = course['courseOpenId']
     openClassId = course['openClassId']
 
@@ -115,29 +100,26 @@ def chapterInfo(course, token, sleepTime, needPinglun):
     listChapter = []
 
     for i in range(len(moduleList)):
-        # 每个章节
+       
         module = moduleList[i]
-        # 章节id
+       
         moduleId = module['id']
-        # 章节name
+      
         moduleName = module['name']
-        # 章节进度
-        # modulePercent = module['percent']
-
+    
         dic = {
             'courseOpenId': courseOpenId,
             'openClassId': openClassId,
             'moduleId': moduleId,
             'moduleName': moduleName
         }
-        # 将每个章节参数对应信息放在字典
-        # 在存入列表中传递
+        
         listChapter.append(dic)
     
-    topicInfo(listChapter, token, sleepTime, needPinglun)
+    topicInfo(listChapter, token,  needPinglun)
          
-# 章节下面一级子目录信息
-def topicInfo(listChapter, token, sleepTime, needPinglun):
+
+def topicInfo(listChapter, token,  needPinglun):
     url = 'https://zjy2.icve.com.cn/api/study/process/getTopicByModuleId'
     listChapterComment = []
 
@@ -168,27 +150,22 @@ def topicInfo(listChapter, token, sleepTime, needPinglun):
                 'topicId': topicId,
                 'topicName': topicName
             }
-            # 将对应子目录参数列表封装成字典
-            # 在放在列表中传递
+           
             listTopic.append(dic)
-
-        # 返回的是每个章节 下 文件 对应的所需 评论 参数[{}, {}, {}...]
-        listTopicComment = cellInfo(listTopic, token, sleepTime)
-        # 列表中对应是 所有章节 下 各文件 对应需要 评论 参数[[{}, {}, {}...],[{}, {}, {}...],[{}, {}, {}...]...]
+      
+        listTopicComment = cellInfo(listTopic, token)
+       
         listChapterComment.append(listTopicComment)
         
         time.sleep(1)
 
     if needPinglun == 1:
-        # 当文件刷完, 才会执行到该代码
         print('各文件评论开始, 需要一段时间')
         print('请等待..')
         doComment(listChapterComment)
 
 
-# 要刷文件信息
-# + 调用刷课函数
-def cellInfo(listTopic, token, sleepTime):
+def cellInfo(listTopic, token):
     url = 'https://zjy2.icve.com.cn/api/study/process/getCellByTopicId'
 
     listTopicComment = []
@@ -226,7 +203,7 @@ def cellInfo(listTopic, token, sleepTime):
             }
             
             number = len(childNodeList)
-            # 遍历子节点信息
+            
             for k  in range(number):
                 cellId = childNodeList[k]['Id']
                 cellName = childNodeList[k]['cellName']
@@ -242,7 +219,6 @@ def cellInfo(listTopic, token, sleepTime):
                 if k+1 == number:
                     break
 
-                # 添加子节点需要评论的参数
                 listCellComemnt.append(dicComment)
 
             dic = {
@@ -268,14 +244,12 @@ def cellInfo(listTopic, token, sleepTime):
         listTopicComment.append(listCellComemnt)
 
         time.sleep(2)
-        # 刷课
-        doIt(listCell, token, sleepTime)
-    # 子目录下个文件参数[{}, {}, {}...]
+        
+        doIt(listCell, token)
+   
     return listTopicComment
         
-
-# 刷视频\刷ppt\文档\图片\压缩包
-def doIt(listCell, token, sleepTime):
+def doIt(listCell, token):
     for i in range(len(listCell)):
         courseOpenId = listCell[i]['courseOpenId']
         openClassId = listCell[i]['openClassId']
@@ -286,13 +260,13 @@ def doIt(listCell, token, sleepTime):
         childNodeList = listCell[i]['childNodeList']
         
         # 刷视频文件
-        if categoryName == '视频':
+        if categoryName == '视频' or categoryName == '音频':
             res = doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName).json()
-            # 视频总时长
+            
             audioVideoLong = res['audioVideoLong']
-            # 学习过时长
+            
             stuStudyNewlyTime = res['stuStudyNewlyTime']
-            # 文件进度
+            
             cellPercent = res['cellPercent']
 
             cellLogId = res['cellLogId']
@@ -300,15 +274,15 @@ def doIt(listCell, token, sleepTime):
             print('           文件：' + cellName[:10] + '.., 目前进度：' + str(cellPercent))
             print('           ' + '请等待..')
 
-            video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioVideoLong, token, sleepTime)
+            video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioVideoLong, token)
 
 
-        # 刷ppt\文档类\图片文件
+       
         elif categoryName == 'ppt文档' or  categoryName == '文档' or  categoryName == 'ppt' or categoryName == 'office文档' or categoryName == '图片':
             res = doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName).json()
-            # 文件进度
+           
             cellPercent = res['cellPercent']
-            # 文档总页数
+            
             pageCount = res['pageCount']
 
             cellLogId = res['cellLogId']
@@ -318,7 +292,7 @@ def doIt(listCell, token, sleepTime):
 
             text(courseOpenId, openClassId, cellId, cellLogId, pageCount, token)
         
-        # 刷子节点下面的视频\文档类\图片
+        
         elif categoryName == '子节点':
             listChildCell = []
 
@@ -338,7 +312,7 @@ def doIt(listCell, token, sleepTime):
                 }
 
                 listChildCell.append(dic)  
-            doIt(listChildCell, token, sleepTime)
+            doIt(listChildCell, token)
 
 
 
@@ -348,7 +322,6 @@ def doIt(listCell, token, sleepTime):
 
             doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName)
 
-        # 需手动实现
         else:
             print('           Warning:{}, 文件无法实现'.format(cellName[:5]))
             continue
@@ -357,10 +330,8 @@ def doIt(listCell, token, sleepTime):
 
     time.sleep(1)
 
-# 评论
-def doComment(listChapterComment):
-    # 因为第一个评论 参数star和其他三个不一样
-    # 所以下面i等于1时, 与其他做区分
+
+def doComment(listChapterComment): 
     for i in range(1, 5):
         for j in range(len(listChapterComment)):
             listTopicComment = listChapterComment[j]
@@ -384,11 +355,6 @@ def doComment(listChapterComment):
                     time.sleep(1)
         time.sleep(60)
 
-'''
-    获取章节进度信息
-    如果进度100%（直接略过节约时间）
-    return [json(章节1), json(章节2), ...]
-'''
 def processList(courseOpenId, openClassId):
     url = 'https://zjy2.icve.com.cn/api/study/process/getProcessList'
     params = {
@@ -414,12 +380,6 @@ def doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName):
     res = session.post(url, params=params, verify=False)
     
     if res.json()['code'] == -100 or res.json()['code'] == '-100':
-        '''
-            这里由于：
-                上次文件进度未100%
-                然后点击其他文件时, 会进入一个让你选择页面, 不知道大家见没见过
-                (中间靠上一个矩形, 第一行上次文件链接, 第二行这次选择文件链接)
-        '''
         changeCellData(courseOpenId, openClassId, moduleId, cellId, cellName)
         res = doItNeedInfo(courseOpenId, openClassId, cellId, moduleId, cellName)
         return res
@@ -440,10 +400,10 @@ def changeCellData(courseOpenId, openClassId, moduleId, cellId, cellName):
     session.post(url, data=data, verify=False)
 
 # 刷视频
-def video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioVideoLong, token, sleepTime):
+def video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioVideoLong, token):
     url = 'https://zjy2.icve.com.cn/api/common/Directory/stuProcessCellLog'
 
-    forNum = int((audioVideoLong - stuStudyNewlyTime) / 10) + 2 # 循环次数 总视频长度-观看过后的长度分10段 每段循环后会加10.多
+    forNum = int((audioVideoLong - stuStudyNewlyTime) / 10) + 2 
 
     
     for i in range(forNum):
@@ -474,14 +434,12 @@ def video(courseOpenId, openClassId, cellId, cellLogId,stuStudyNewlyTime, audioV
             print(res)
             exit()
             
-        time.sleep(sleepTime)
+        time.sleep(10)
 
-# 刷文本文件ppt\文档
 def text(courseOpenId, openClassId, cellId, cellLogId, pageCount, token):
     url = 'https://zjy2.icve.com.cn/api/common/Directory/stuProcessCellLog'
 
     for i in range(2):
-        # 第二次直接刷完
         if(i == 1):
             i = pageCount
 
@@ -504,7 +462,6 @@ def text(courseOpenId, openClassId, cellId, cellLogId, pageCount, token):
 
         time.sleep(5)
 
-# 评论
 def comment(courseOpenId, openClassId, cellId, cellName, chooseNum, starNum):
     url = 'https://zjy2.icve.com.cn/api/common/Directory/addCellActivity'
     params = {
@@ -525,12 +482,12 @@ def comment(courseOpenId, openClassId, cellId, cellName, chooseNum, starNum):
 
 
 if __name__ == "__main__":
-    userName, passWord, sleepTime, needPinglun= prepareWork()
+    userName, passWord, needPinglun= prepareWork()
 
     getCookie_acw_tc()
 
     download_code()
 
-    login(userName, passWord, sleepTime, needPinglun)
+    login(userName, passWord, needPinglun)
 
     print('该课程以完成 谢谢使用！')
