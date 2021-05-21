@@ -1,4 +1,3 @@
-from types import CodeType
 import requests
 import urllib3
 import random
