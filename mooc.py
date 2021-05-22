@@ -25,11 +25,16 @@ class Mooc:
         self.courseNeedInfo()
     
     def prepareWork(self):
-        self.userName = input('请输入你的账号：')  #输入你的账号
-        self.passWord = input('请输入你的密码：')  #输入你的密码
-
+        self.userName = input('请输入你的账号：') 
+        self.passWord = input('请输入你的密码：')
+        
+        pinlun = input('请输入是否需要评论：1.评论   2.不评论')
+        
         # 1 评论  0 不评论
-        self.whetherNeedPinlun = 1
+        if pinlun == '2':
+            self.whetherNeedPinlun = 0
+        else:
+            self.whetherNeedPinlun = 1
 
     def getCookie(self):
         url = 'https://mooc.icve.com.cn/'
