@@ -25,8 +25,8 @@ class Mooc:
         self.courseNeedInfo()
     
     def prepareWork(self):
-        self.userName = ''  #输入你的账号
-        self.passWord = ''  #输入你的密码
+        self.userName = input('请输入你的账号：')  #输入你的账号
+        self.passWord = input('请输入你的密码：')  #输入你的密码
 
         # 1 评论  0 不评论
         self.whetherNeedPinlun = 1
