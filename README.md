@@ -12,7 +12,7 @@
 #### 临时上传mooc测试版 2021-6-1
 1. 临时上传了mooc测试版, 解决作业回答失败问题等 不记得了
 2. mooc支持视频秒过， 先凑活用
-3. 职教云代码重写, 开启线程, 评论将不占额外时间, 输出样式更改(将对返回Res异常处理(未完成！)), 过段时间上传
+3. 职教云代码大改, 开启线程, 评论将不占额外时间, 输出样式更改(将对返回Res异常处理(未完成！)), 过段时间上传
 4. mooc以后也会更改
 
 #### 更新说明 2021-5-21
@@ -48,4 +48,5 @@
 3. pip install urllib3 -i https://mirrors.tuna.tsinghua.edu.cn/
 4. random json time好像不需要install
 5. 打开cmd窗口
-6. 输入python main.py 即可
+6. 职教云：输入python zjy.py 即可
+7. Mooc：输入 python mooc.py 即可
