@@ -18,6 +18,7 @@ session.headers = headers
 
 class Mooc:
     def __init__(self):
+        self.count = 0
         self.prepareWork()
         self.getCookie()
         self.download_code()
@@ -28,7 +29,7 @@ class Mooc:
         self.userName = input('请输入你的账号：') 
         self.passWord = input('请输入你的密码：')
         
-        pinlun = input('请输入是否需要评论：1.评论   2.不评论')
+        pinlun = input('请输入是否需要评论：1.评论   2.不评论 ')
         
         # 1 评论  0 不评论
         if pinlun == '2':
@@ -57,7 +58,7 @@ class Mooc:
     def login(self):
         url = 'https://mooc.icve.com.cn/portal/LoginMooc/loginSystem'
 
-        verifyCode = input("请输入验证码:")
+        verifyCode = input("请输入验证码: ")
 
         data = {
         'userName': self.userName,
@@ -92,7 +93,7 @@ class Mooc:
 
         i = int(input('你所学课程如上, 请选择: ')) - 1
 
-        courseInfo = courseList[i]
+        # courseInfo = courseList[i]
 
         self.Id = courseList[i]['Id']
         self.courseOpenId = courseList[i]['courseOpenId']
@@ -137,7 +138,6 @@ class Mooc:
 
             if modulePercent == 100:
                 print('目录: ' + moduleName +', 进度100%(自动跳过)')
-                time.sleep(1)
                 continue
 
             print('目录: ' + moduleName)
@@ -173,7 +173,6 @@ class Mooc:
 
                 if studyStatus == 1:
                     print('    子目录: ' + topicName[:10] + '..'  +  ', 进度100%(自动跳过)')
-                    time.sleep(3)
                     continue
 
                 Tdic = {
@@ -310,15 +309,16 @@ class Mooc:
 
             elif categoryName == '作业' or categoryName == '测验':
                 print('         文件: ' + cellName + ', 开始刷课！！')
+                print('         notice: 作业/测验会刷两次')
                 print('         请等待..')
-                print('         notice: 作业/测验会刷两次')  
 
-                stuWorkCount, ReplyCount, agreeWorkExam, paperType = self.getWorkExamData(resId)
+                ReplyCount, agreeWorkExam= self.getWorkExamData(resId)
 
                 if agreeWorkExam != 'agree':
                     print('         作业/测试时间已过期, 跳过')
+                    continue
                 else:
-                    if ReplyCount == -1 or ReplyCount >=2 or paperType != 1:
+                    if ReplyCount == -1 or ReplyCount >=2:
                         time.sleep(1)
                         studentWorkId = self.workDetail(resId)
 
@@ -326,44 +326,46 @@ class Mooc:
                             time.sleep(3)
                             uniqueId, bigQuestions, questions = self.workExamPerview(resId)
                             for bigQuestion in bigQuestions:
-                                if bigQuestion['Title'] == '简答题':
-                                    print('         有简答题, 请手动实现')
-                                else:
-                                    examList = []
-                                    for question in questions:
-                                        DAdic = {
-                                            'Answer': '1',
-                                            'questionId': question['questionId'],
-                                            'questionType': question['questionType']
-                                        }
-                                        examList.append(DAdic)
+                                if bigQuestion['Title'] == '简答题' or bigQuestion['Title'] == '主观题':
+                                    print('         有简答题/主观题, 请手动实现')
+                                    continue
 
-                                    time.sleep(1)
-                                    shuake = Shuake(self.courseOpenId, cellId, moduleId)
-                                    shuake.zuoye(examList, uniqueId)
-                                    shuake.zuoyeSubmit(uniqueId, resId)
-
-                                    ZYDic = {
-                                        'cellId': cellId,
-                                        'categoryName': categoryName,
-                                        'cellName': cellName,
-                                        'moduleId': moduleId,
-                                        'topicId': topicId,
-                                        'isStudyFinish': False,
-                                        'resId': resId,
-                                        'childNodeList': []
+                                examList = []
+                                for question in questions:
+                                    DAdic = {
+                                        'Answer': '1',
+                                        'questionId': question['questionId'],
+                                        'questionType': question['questionType']
                                     }
+                                    examList.append(DAdic)
+                                    break
 
-                                    ZYList = [ZYDic]
-                                    time.sleep(3)
-                                    self.doIt(ZYList)
+                                time.sleep(5)
+                                shuake = Shuake(self.courseOpenId, cellId, moduleId)
+                                shuake.zuoye(examList, uniqueId)
+                                shuake.zuoyeSubmit(uniqueId, resId)
+
+                                ZYDic = {
+                                    'cellId': cellId,
+                                    'categoryName': categoryName,
+                                    'cellName': cellName,
+                                    'moduleId': moduleId,
+                                    'topicId': topicId,
+                                    'isStudyFinish': False,
+                                    'resId': resId,
+                                    'childNodeList': []
+                                }
+
+                                ZYList = [ZYDic]
+                                self.doIt(ZYList)
                                     
                         else:
                             # 作业/测试做第二次执行
-                            time.sleep(10)
+                            time.sleep(20)
                             examList = self.ExamHistory(resId, studentWorkId, categoryName)
                             if examList == []:
-                                print('         有简答题, 请手动实现')
+                                print('         有简答题/主观题, 请手动实现')
+                                continue
                             else:
                                 time.sleep(3)
                                 uniqueId, bigQuestions, questions = self.workExamPerview(resId)
@@ -372,17 +374,29 @@ class Mooc:
 
                                 shuake = Shuake(self.courseOpenId, cellId, moduleId)
                                 shuake.zuoye(examList, uniqueId)
-                                shuake.zuoyeSubmit(uniqueId, resId)
-                                
+                                shuake.zuoyeSubmit(uniqueId, resId)                              
                     else:
                         print('         作业/测试只能做一次或需要审批, 请手动实现')
-                
-                time.sleep(2)
-           
+                        continue
+            
+            elif categoryName == '其它'  or categoryName == 'swf':
+                print('         文件: ' + cellName + ', 开始刷课！！')
+                print('         请等待..')
+
+                shuake = Shuake(self.courseOpenId, cellId, moduleId)
+                shuake.other()
+            
+            elif categoryName == '压缩包':
+                print('         文件: ' + cellName + ', 开始刷课！！')
+                print('         请等待..')
+
+                shuake = Shuake(self.courseOpenId, cellId, moduleId)
+                shuake.yasuobao()
+
             else:
                 print('         该程序处理不了！')
 
-            time.sleep(2)
+            time.sleep(3)
 
     def getWorkExamData(self, resId):
         url = 'https://mooc.icve.com.cn/study/workExam/getWorkExamData'
@@ -399,13 +413,12 @@ class Mooc:
             print('获取做作业数据失败！')
             exit()
         
-        stuWorkCount = res['workExam']['stuWorkCount']
         ReplyCount = res['workExam']['ReplyCount']
 
         agreeWorkExam = res['workExam']['agreeWorkExam']
-        paperType = res['workExam']['paperType']
 
-        return stuWorkCount, ReplyCount, agreeWorkExam, paperType
+
+        return ReplyCount, agreeWorkExam
 
     def workDetail(self, resId):
        
@@ -458,10 +471,9 @@ class Mooc:
         bigQuestions = json.loads(workExamData)['bigQuestions']
 
         for i in bigQuestions:
-            id = i['Id']
             Title = i ['Title']
 
-            if Title == "简答题":
+            if Title == "简答题" or Title == "主观题":
                 return []
 
         questions = json.loads(workExamData)['questions']
@@ -518,6 +530,7 @@ class Shuake:
         self.moduleId = moduleId
 
     def VideoInfo(self):
+        self.count = 0
         url = 'https://mooc.icve.com.cn/study/learn/viewDirectory'
 
         data = {
@@ -527,7 +540,9 @@ class Shuake:
             'moduleId': self.moduleId
         }
 
-        res = json.loads(session.post(url, data=data, verify=False).text)
+        res = session.post(url, data=data, verify=False).text
+
+        res = self.checkRes(url, data, res, 30)
 
         if res['code'] != 1:
             print('获取视频信息出错！')
@@ -540,6 +555,7 @@ class Shuake:
         self.currentTime = res['currentTime']
    
     def pptInfo(self):
+        self.count = 0
         url = 'https://mooc.icve.com.cn/study/learn/viewDirectory'
 
         data = {
@@ -549,47 +565,97 @@ class Shuake:
             'moduleId': self.moduleId
         }
 
-        res = json.loads(session.post(url, data=data, verify=False).text)
+        res = session.post(url, data=data, verify=False).text
+
+        res = self.checkRes(url, data, res, 10)
 
         if res['code'] != 1:
-            print('获取视频信息出错！')
+            print('获取文档信息出错！')
             exit()
         
         self.videoPercent = res['VideoPercent']
         courseCell = res['courseCell']
         self.CategoryName = courseCell['CategoryName']
         self.PageCount = courseCell['PageCount']
-
+    
     def video(self):
+        time.sleep(3)
         url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
-        otherTime = self.VideoTimeLong - self.currentTime
-
-        forNum = int(otherTime / 60) + 1
-
-        for i in range(forNum):
-            time.sleep(60)
-
-            auvideoLength = self.currentTime + 60 * (i+1)
-
-            if auvideoLength > self.VideoTimeLong:
-                auvideoLength = self.VideoTimeLong
-
-            data = {
+        data = {
                 'courseId': '',
                 'courseOpenId': self.courseOpenId,
                 'moduleId': self.moduleId,
                 'cellId': self.cellId,
-                'auvideoLength': auvideoLength,
+                'auvideoLength': self.VideoTimeLong,
                 'videoTimeTotalLong': self.VideoTimeLong,
                 'sourceForm': '993'
             }
-
+        
+        
+        res = json.loads(session.post(url, data=data, verify=False).text)
+        if res['code'] == -1:
+            print('notice: 刷视频异常')
+            time.sleep(15)
             res = json.loads(session.post(url, data=data, verify=False).text)
-            # print('视频返回信息: ' + str(res))
-            if res['code'] != 1:
-                print('刷视频出错！')
-                exit()
+
+        print('视频返回信息: ' + str(res))
+        if res['code'] != 1:
+            print('刷视频出错！')
+            exit()
+
+        # for i in [2, 1, 0]:
+        #     time.sleep(60)
+
+        #     auvideoLength = self.VideoTimeLong-i*60 + 12
+
+        #     if auvideoLength > self.VideoTimeLong:
+        #         auvideoLength = self.VideoTimeLong
+
+        #     data = {
+        #         'courseId': '',
+        #         'courseOpenId': self.courseOpenId,
+        #         'moduleId': self.moduleId,
+        #         'cellId': self.cellId,
+        #         'auvideoLength': auvideoLength,
+        #         'videoTimeTotalLong': self.VideoTimeLong,
+        #         'sourceForm': '993'
+        #     }
+
+        #     res = json.loads(session.post(url, data=data, verify=False).text)
+        #     # print('视频返回信息: ' + str(res))
+        #     if res['code'] != 1:
+        #         print('刷视频出错！')
+        #         exit()
+        # url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+
+        # otherTime = self.VideoTimeLong - self.currentTime
+
+        # forNum = int(otherTime / 60) + 1
+
+        # for i in range(forNum):
+        #     time.sleep(60)
+
+        #     auvideoLength = self.currentTime + 60 * (i+1)
+
+        #     if auvideoLength > self.VideoTimeLong:
+        #         auvideoLength = self.VideoTimeLong
+
+        #     data = {
+        #         'courseId': '',
+        #         'courseOpenId': self.courseOpenId,
+        #         'moduleId': self.moduleId,
+        #         'cellId': self.cellId,
+        #         'auvideoLength': auvideoLength,
+        #         'videoTimeTotalLong': self.VideoTimeLong,
+        #         'sourceForm': '993'
+        #     }
+
+        #     res = json.loads(session.post(url, data=data, verify=False).text)
+        #     # print('视频返回信息: ' + str(res))
+        #     if res['code'] != 1:
+        #         print('刷视频出错！')
+        #         exit()
 
     def wendang(self):
         url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
@@ -605,12 +671,54 @@ class Shuake:
         
         res = json.loads(session.post(url, data=data, verify=False).text)
 
+        if res['code'] == -1:
+            print('notice: 刷文档异常')
+            time.sleep(10)
+            res = json.loads(session.post(url, data=data, verify=False).text)
+
         if res['code'] != 1:
             print('刷文档出错！')
             exit()
-        
+
+    def other(self):
+        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+
+        data = {
+            'courseId': '',
+            'courseOpenId': self.courseOpenId,
+            'moduleId': self.moduleId,
+            'cellId': self.cellId,
+            'videoTimeTotalLong': 0,
+            'sourceForm': 1030
+            }
+
+        res = json.loads(session.post(url, data=data, verify=False).text)
+
+        if res['code'] != 1:
+            print('刷其他文件出错！')
+            exit()
+
+    def yasuobao(self):
+        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+
+        data = {
+            'courseId': '',
+            'courseOpenId': self.courseOpenId,
+            'moduleId': self.moduleId,
+            'cellId': self.cellId,
+            'auvideoLength': 10,
+            'videoTimeTotalLong': 0,
+            'sourceForm': 888
+            }
+
+        res = json.loads(session.post(url, data=data, verify=False).text)
+
+        if res['code'] != 1:
+            print('刷压缩包出错！')
+            exit()
 
     def taolun(self, resId):
+        self.count = 0
         url = 'https://mooc.icve.com.cn/study/discussion/addStuViewTopicRemember'
 
         data = {
@@ -618,7 +726,9 @@ class Shuake:
             'topicId': resId
         }
 
-        res = json.loads(session.post(url, data=data, verify=False).text)
+        res = session.post(url, data=data, verify=False).text
+
+        res = self.checkRes(url, data, res, 5)
  
         if res['msg']  not in ["浏览成功", "已浏览主题"]:
             print('讨论类文件出错！')
@@ -626,6 +736,7 @@ class Shuake:
         
     def pinglun(self):
         for i in range(1, 5):
+            self.count = 0
             url = 'https://mooc.icve.com.cn/study/learn/saveAllReply'
 
             if i == 2:
@@ -650,7 +761,14 @@ class Shuake:
                 'urlList': '[]'
             }
 
-            res = json.loads(session.post(url, data=data, verify=False).text)
+            res = session.post(url, data=data, verify=False).text
+            
+            res = self.checkRes(url, data, res, 5)
+
+            if res['code'] == -100 or res['code'] == -1:
+                print('视频异常, 跳过')
+                time.sleep(30)
+                return
 
             if res['code'] != 1:
                 print('评论出错！')
@@ -660,6 +778,7 @@ class Shuake:
         print('         评论完成！！')
    
     def wendangAddTime(self):
+        self.count = 0
         time.sleep(3)
         url = 'https://mooc.icve.com.cn/study/learn/computatlearningTimeLong'
 
@@ -669,17 +788,21 @@ class Shuake:
             'courseOpenId': self.courseOpenId,
             'moduleId': self.moduleId,
             'cellId': self.cellId,
-            'auvideoLength': 10,
+            'auvideoLength': random.randint(180, 240),
         }
 
-        res = json.loads(session.post(url, data=data, verify=False).text)
+        res = session.post(url, data=data, verify=False).text
+
+        res = self.checkRes(url, data, res, 10)
 
         if res['code'] != 1:
-            print('刷时间出错！')
-            exit()
+            print('notice: 刷时间出错！')
+            time.sleep(10)
+            return
        
     def zuoye(self, examList, uniqueId):
         for exam in examList:
+            self.count = 0
             # 答案
             Answer = exam['Answer']
             questionId = exam['questionId']
@@ -693,32 +816,22 @@ class Shuake:
                 'workExamType': 0,
                 'paperStuQuestionId':'', 
                 'online': 1,
-                'answer': Answer,
+                'answer': Answer, 
                 'userId': '',
                 'questionType': questionType,
                 'uniqueId': uniqueId
             }
 
-            res = json.loads(session.post(url, data=data, verify=False).text)
+            res = session.post(url, data=data, verify=False).text
+
+            res = self.checkRes(url, data, res, 5)
 
             if res['code'] != 1:
                 print('回答作业失败')
                 exit()
             
             # print("回答题目Info：" + str(res))
-            time.sleep(5)
-
-    def getDaAn(self, resId, studentWorkId):
-        url = 'https://mooc.icve.com.cn/study/workExam/homeWork/history.html'
-
-        params = {
-            'courseOpenId': self.courseOpenId,
-            'workExamId': resId,
-            'studentWorkId': studentWorkId,
-            'workExamType': 0
-        }
-
-        res = session.get(url, params=params, verify=False).text
+            time.sleep(2)
     
     def zuoyeSubmit(self, uniqueId, workExamId):
         url = 'https://mooc.icve.com.cn/study/workExam/workExamSave'
@@ -732,16 +845,37 @@ class Shuake:
             'useTime': random.randint(120, 180)
         }
 
-        res = json.loads(session.post(url, data=data, verify=False).text)
+        res = session.post(url, data=data, verify=False).text
+
+        if res == '<h1>:(</h1>您的访问出错了':
+            print('提交作业失败 15后重新提交')
+            time.sleep(15)
+            res = session.post(url, data=data, verify=False).text
+
+        # res = self.checkRes(url, data, res, 30)
+        res = json.loads(res)
 
         if res['code'] != 1:
-            print('作业提交失败！')
+            print('作业提交Info: ' + str(res))
             exit()
 
+    def checkRes(self, url, data, res, Time):
+
+        while res == '<h1>:(</h1>您的访问出错了':
+            self.count = self.count + 1
+            
+            if self.count >= 2:
+                print('访问出错,请等待十分钟, 再次运行')
+                exit()
+
+            print('         访问出错, {}秒后重新访问.'.format(Time))
+            time.sleep(Time)
+            res = session.post(url, data=data, verify=False).text
+
+        return json.loads(res)
 
 if __name__ == "__main__":
     Mooc()
     print('谢谢使用！')
-
 
 
