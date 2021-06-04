@@ -13,7 +13,7 @@
 ##### 2021-6-5
 1. 食用方式
 ```
-    1. 安装包 
+        1. 安装包 
 		pip install requests -i https://mirrors.tuna.tsinghua.edu.cn/
 		pip install urllib3 -i https://mirrors.tuna.tsinghua.edu.cn/
 		pip install muggle_ocr -i https://mirrors.tuna.tsinghua.edu.cn/
@@ -23,7 +23,7 @@
 
 2. 职教云功能
 ```
-    1. 现支持免验证码登录
+        1. 现支持免验证码登录
 	2. 记录cookie信息, 减少登录次数(可维持一天)
 	3. 提供常见课件刷课
 	4. 开启线程, 评论不占额外时间
@@ -35,7 +35,7 @@
 3. Mooc学院功能
 ```
 	1. 目前未改版, 仍为老版本
-    2. 提供常见课件刷课、评论
+        2. 提供常见课件刷课、评论
 	3. 视频、音频类秒过(增加学习时长)
 	4. 做作业、测试需支持能做次数大于2或为无限次
 ```
