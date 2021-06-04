@@ -1,16 +1,17 @@
-# /usr/bin/python3
-# coding=utf-8
-
 import os
 import yaml
 import json
-import math
 import time
-import random
+import urllib3
+import threading
 
-from ZhiJiao import ZhiJiao
-from alive_progress import alive_bar
-from Util import print_list, print_tree
+from utils import captcha
+from zjy import ZhiJiao
+from shuake import ShuaKe
+
+# 解决警告
+urllib3.disable_warnings()
+
 
 if __name__ == "__main__":
 
@@ -26,211 +27,195 @@ if __name__ == "__main__":
     except yaml.YAMLError as exc:
         print("❌ 初始化时出现错误：配置文件异常！")
         exit(-2)
-
-    # 初始化网课操作对象
-    obj = ZhiJiao()
-
-    print("开始登陆……")
+    # 职教云实例对象
+    zjy = ZhiJiao()
+    print('开始登录...⏳')
     # 先判断有没有缓存Cookie
     if os.path.exists("cookies.json"):
         with open("cookies.json", "r", encoding='utf-8') as f:
             js = f.read()
         # 设置 Cookies
-        obj.set_cookie(js)
-
-    # 取一下数据，查看 Cookies 是否有效
-    if len(obj.s.cookies.items()) == 0 or not ('courseList' in obj.getCourseList()):
+        zjy.set_cookie(js)
+    # 课程列表
+    courseList = zjy.courseList()
+    if len(zjy.session.cookies.items()) == 0 or  courseList == '':
+        print('⚠️  Cookie信息失效, 自动登录中...⏳')
         # 清空Cookies
-        obj.s.cookies.clear()
-        # 登陆
-        if obj.login_m(str(config['member']['user']), str(config['member']['pass'])):
-            if config['saveCookies']:
-                # 获取 Cookies
-                ck = json.dumps(obj.s.cookies.items())
-                # 保存到文件
-                f = open("cookies.json", "w", encoding='utf-8')
-                f.write(ck)
-                f.close()
-        else:
-            print("登陆失败！")
-            exit()
+        zjy.session.cookies.clear()
+        # 获取cookie参数acw_tc
+        zjy.getCookie_acw_tc()
 
-    userId = obj.getUserInfo()['stuId']
+        while True:
+            # 登录
+            if zjy.verfiyCode() and zjy.login(str(config['member']['user']), str(config['member']['pass'])):
+                print('登录成功 ✅')
+                courseList = zjy.courseList()
 
-    print("正在获取课程列表……")
-    course = obj.getCourseList()['courseList']
-
-    # 输出
-    print_list(course)
-
+                if config['saveCookies']:
+                    # 获取 Cookies
+                    ck = json.dumps(zjy.session.cookies.items())
+                    # 保存到文件
+                    f = open("cookies.json", "w", encoding='utf-8')
+                    f.write(ck)
+                    f.close()
+                break
+            else:
+                print('⚠️  2秒后将重新登录, 请等待...')
+                time.sleep(2)
+    else:
+        print('登录成功！Cookie信息可以使用！🎉\n')
+    # 打印课程名
+    for i in range(len(courseList)):
+        courseName = courseList[i]['courseName']
+        print(str(i+1) +'   '+ courseName)
+    # 选择课程
     while True:
-        # 异常输入判断
         try:
-            # 要求输入
-            id = int(input("课程id: "))
+            courseId = int(input('请选择你要刷的课程：')) - 1
         except ValueError:
             print("您输入的数据不符合规范！")
             continue
-        if id == -1:
-            exit(0)
-        if id >= len(course) or id < 0:
+
+        if courseId >= len(courseList) or courseId  < 0:
             print("课程id不存在！")
-            continue
+            continue                   
         break
+    print('开始刷课 <{}>'.format(courseList[courseId]['courseName']))
+    print('获取各课件参数中, 请稍候...⏳')
+    # 所有章节请求参数
+    chapterList = zjy.chapter(courseList[courseId])
+    # 所有子目录的请求参数
+    topicList = zjy.topic(chapterList)
+    # 所有文件的请求参数
+    cellList = zjy.cell(topicList)
+    #　刷课实例对象
+    shuake = ShuaKe(zjy.session, zjy.courseOpenId, zjy.openClassId, config)
+    # 刷课件函数
+    def kejian():
+        global cellList
+        # 刷课件
+        for cell in cellList:
+            cellId = cell['cellId']
+            moduleId = cell['moduleId']
+            cellName = cell['cellName']
+            categoryName = cell['categoryName']
+            childNodeList = cell['childNodeList']
+            stuCellPercent = cell['stuCellPercent']
+            count = 0
+            if stuCellPercent == 100:
+                continue
 
-    # 输出选中的课程名称
-    print("\n<%s>" % course[id]['courseName'])
+            if categoryName != '子节点': 
+                print("\n💼 任务类型: %s" % categoryName)
 
-    # 获取课程目录
-    cata = obj.getCourseCata(course[id]['courseOpenId'], course[id]['openClassId'])
+            # 刷视频文件
+            if categoryName == '视频' or categoryName == '音频':
+                print("📺 {} <{}> ".format(categoryName, cellName))
+                print("⏳ 正在自动完成...")
 
-    # 输出目录
-    print_tree(cata)
+                shuake.video(cellId, moduleId, cellName, categoryName, count)
 
-    # 遍历目录
-    for item in cata:
-        # 查看是否完成
-        if item['percent'] == 100:
-            continue
+                print("🎉 {}任务完成!".format(categoryName))
+            
+            elif categoryName == 'ppt文档' or  categoryName == '文档' or  categoryName == 'ppt' or categoryName == 'office文档':
+                print("📽  {} <{}> ".format(categoryName, cellName, categoryName))
+                print("⏳ 正在自动完成...")
 
-        # 获取目录id
-        moduleId = item['id']
+                shuake.ppt(cellId, moduleId, cellName, categoryName, count)
 
-        for items in item['data']:
-            # 获取数据
-            courseOpenId = course[id]['courseOpenId']
-            openClassId = course[id]['openClassId']
-            topicId = items['id']
-            # 获取任务
-            task = obj.getData(courseOpenId, openClassId, topicId)
+                print("🎉 {}任务完成!".format(categoryName))
+            
+            elif categoryName == '压缩包' or categoryName == 'swf' or categoryName=='链接' or categoryName == '其他'  or categoryName == '图片':
+                print("🔗 {} <{}> ".format(categoryName, cellName))
+                print("⏳ 正在自动完成...")
 
-            # 遍历任务点; 判断是否完成
-            for item2 in task:
-                # 判断是否达到100%的进度
-                if item2['stuCellPercent'] == 100:
-                    continue
-                # 获取数据
-                cellId = item2['Id']
-                task_type = item2['categoryName']
- 
-                # 取任务详细信息
-                info = obj.getTaskInfo(courseOpenId, openClassId, cellId, moduleId)
+                shuake.info(cellId, moduleId, cellName, count)
 
-                # 判断多开
-                if info['code'] == -100:
-                    print("\n⚠️ 因服务器限制，您只可以同时学习一门课程！")
-                    action = input("❓ 是否继续学习？(yes/no): ")
-                    if action != "yes":
-                        exit(0)
+                print("🎉 {}任务完成!".format(categoryName))
+
+            elif categoryName == '子节点':
+                for childNode in childNodeList:
+                    cellId = childNode['Id']
+                    cellName = childNode['cellName']
+                    categoryName = childNode['categoryName']
+                    stuCellFourPercent = childNode['stuCellFourPercent']
+
+                    if stuCellFourPercent == 100:
+                        continue
                     
-                    # 告诉服务器我们的选择
-                    obj.choiceCourse(courseOpenId, openClassId, cellId, moduleId, info['currCellName'])
+                    print("\n💼 任务类型: %s" % categoryName)
 
-                    # 重新获取数据
-                    info = obj.getTaskInfo(courseOpenId, openClassId, cellId, moduleId)
+                    # 刷视频文件
+                    if categoryName == '视频' or categoryName == '音频':
+                        print("📺 {} <{}> ".format(categoryName, cellName))
+                        print("⏳ 正在自动完成...")
 
-                
-                print("\n💼 任务类型: %s" % task_type)
+                        shuake.video(cellId, moduleId, cellName, categoryName, count)
 
-                # 获取数据
-                cellLogId = info['cellLogId']
-                Token = info['guIdToken']
+                        print("🎉 {}任务完成!".format(categoryName))
+                    
+                    elif categoryName == 'ppt文档' or  categoryName == '文档' or  categoryName == 'ppt' or categoryName == 'office文档':
+                        print("📽  {} <{}> ".format(categoryName, cellName))
+                        print("⏳ 正在自动完成...")
 
-                if task_type == 'ppt':
-                    print("📽 ppt 《%s》 \n⏳ 正在自动完成" % item2['cellName'])
-                    pageCount = info['pageCount']
-                    obj.updateLog(courseOpenId, openClassId, moduleId, cellId, cellLogId, pageCount, 0, pageCount, Token)
-                    print("🎉 ppt任务完成!")
-                elif task_type == '视频':
+                        shuake.ppt(cellId, moduleId, cellName, categoryName, count)
 
-                    audioVideoLong = info['audioVideoLong']
+                        print("🎉 {}任务完成!".format(categoryName))
+                    
+                    elif categoryName == '压缩包' or categoryName == 'swf' or categoryName=='链接' or categoryName == '其他'  or categoryName == '图片':
+                        print("🔗 {} <{}> ".format(categoryName, cellName))
+                        print("⏳ 正在自动完成...")
 
-                    print("📺 视频 《%s》 " % item2['cellName'])
-                    print("⏰ 视频时长: %.2f 分钟" % (audioVideoLong / 60))
-                    print("⏳ 正在自动完成……")
+                        shuake.info(cellId, moduleId, cellName, count)
 
-                    # 开始进行模拟上报数据
-                    # 观看进度变量
-                    index = 0
-                    # 获取已观看的时间
-                    times = info['stuStudyNewlyTime'] #20.2
-                    # 进度条
-                    with alive_bar(int(audioVideoLong) + 1) as bar:
-                        while True:
-                            # 如果是视频长度大于 10 秒
-                            # 我们就分步走
-                            # 首先先判断，我们之前是否有看过
-                            if times > 0:
-                                # 如果有看过, 就把原进度赋值过来
-                                index = times
-                                # 然后再将进度变化反馈给用户
-                                for ited in range(int(index)):
-                                    bar()
-                                # 再把进度记录给置为 0 
-                                # 以免之后的循环出现问题
-                                times = 0
+                        print("🎉 {}任务完成!".format(categoryName))
 
-                            # 首先判断视频长度的是否 小于 10 秒, 或者 剩余的播放时间是否够 10 秒
-                            if audioVideoLong > 10 and audioVideoLong - index > 10:
-                                # 到这就说明视频长度既大于10秒，并且剩余的播放时间也大于10秒
-                                # 然后就开始延时
-                                for ited in range(10):
-                                    bar()
-                                    time.sleep(1)
-                                # 延时后级对 index 进行递增 10
-                                index = index + 10
-                                # 然后设置一个用于告诉服务器播放进度对值
-                                temp = index + random.random()
-                            else:
-                                # 不足1秒的按照1秒算
-                                itemed = range(int(audioVideoLong - index) + 1)
-                                for ited in itemed:
-                                    bar()
-                                    time.sleep(1)
-                                # 然后直接赋值
-                                temp = audioVideoLong
-                            # 上报数据
-                            res = obj.updateLog(courseOpenId, openClassId, moduleId, cellId, cellLogId, 0, "%.6f" % temp, 0, Token)
-
-                            # 判断是否出现异常 或者 是否完成
-                            if not res or temp == audioVideoLong: 
-                                break
- 
-                    # 判断是否完成, 从循环出来只有可能是出现异常和正常
-                    if not res:
-                        print("🚫 该视频任务因数据上报异常而终止!")
                     else:
-                        if config['videoComment']:
-                            # 获取这个视频的评论列表
-                            comment = obj.getComment(courseOpenId, openClassId, moduleId, cellId)
+                        print("❓ {}程序无法识别, 请联系管理员！".format(categoryName))
+                        continue
                     
-                            exit = False
+                    time.sleep(3)
+                continue
+            
+            else:
+                print("❓ {}程序无法识别, 请联系管理员！".format(categoryName))
+                continue
+            
+            time.sleep(3)
+    # 职教云评论函数
+    # 1评价  3问答  2笔记  4纠错 
+    def comment():
+        global cellList
+        for i in [1, 3, 2, 4]:
+            for cell in cellList:
+                cellId = cell['cellId']
+                
+                if i == 1:
+                    shuake.pinglun(cellId, 1, config['star'])
+                else:
+                    shuake.pinglun(cellId, i, 0)
 
-                            # 判断视频是否评论
-                            for item4 in comment:
-                                if item4['userId'] == userId:
-                                    exit = True
-                                    break
-                        
-                            # 判断是否评论
-                            if not exit:
+                time.sleep(3)
 
-                                size = len(config['commentList'])
+    # 刷课件 评论
+    if config['comment']:
+        # 线程一刷课件
+        t1 = threading.Thread(target=kejian)
+        t1.setDaemon(True)
+        t1.start()
+        # 线程二刷评论
+        t2 = threading.Thread(target=comment)
+        t2.setDaemon(True)
+        t2.start()
 
-                                rand = random.randint(0, size - 1)
+        t1.join()
+        t2.join()
+    else:
+        kejian()
 
-                                content = config['commentList'][rand]
+    print("\n🎉🎉🎉 你已完成了 <{}> 的所有课程！🎉🎉🎉".format(courseList[courseId]['courseName']))
 
-                                star = config['videoStar']
+ 
 
-                                # 执行评论
-                                obj.commentVideo(courseOpenId, openClassId, cellId, moduleId, content, star)
-                        
-                        print("🎉 视频 《%s》 已完成!" % item2['cellName'])
 
-                elif task_type == '链接':
-                    print("🔗 链接 《%s》 已完成!" % item2['cellName'])
-                elif task_type == '图片':
-                    print("🖼 图片 《%s》 已完成!" % item2['cellName'])
-
-    print("\n🎉 你已完成了本课的所有课程！")
+    
