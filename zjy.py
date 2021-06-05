@@ -29,7 +29,7 @@ class ZhiJiao:
         # 下载到本地
         with open('verifycode.png', 'wb') as f:
             f.write(img)
-        # 识别验证码
+        # 识别验证码 
         self.code = captcha('verifycode.png')
         # 删除图片
         os.remove('verifycode.png')
