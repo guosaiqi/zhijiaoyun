@@ -59,7 +59,7 @@ class ZhiJiao:
             print('❌ 登录异常, 出现未知错误, 请联系管理员！')
             exit()
     # 获取所学课程Info
-    def courseList(self):
+    def courseInfo(self):
         url = 'https://zjy2.icve.com.cn/api/student/learning/getLearnningCourseList'
 
         res = self.session.post(url, verify=False)
