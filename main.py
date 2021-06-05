@@ -6,7 +6,7 @@ import urllib3
 import threading
  
 from utils import captcha
-from zjy import ZhiJiao
+from zhijiao import ZhiJiao
 from shuake import ShuaKe
 
 # 解决警告
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         # 设置 Cookies
         zjy.set_cookie(js)
     # 课程列表
-    courseList = zjy.courseList()
+    courseList = zjy.courseInfo()
     if len(zjy.session.cookies.items()) == 0 or  courseList == '':
         print('⚠️  Cookie信息失效, 自动登录中...⏳')
         # 清空Cookies
