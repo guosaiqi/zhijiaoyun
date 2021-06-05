@@ -1,5 +1,5 @@
 import muggle_ocr
-
+  
 def captcha(imagePath):
 
     sdk = muggle_ocr.SDK(model_type=muggle_ocr.ModelType.Captcha)
