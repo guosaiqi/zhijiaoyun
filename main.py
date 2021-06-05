@@ -49,7 +49,7 @@ if __name__ == "__main__":
             # 登录
             if zjy.verfiyCode() and zjy.login(str(config['member']['user']), str(config['member']['pass'])):
                 print('登录成功 ✅')
-                courseList = zjy.courseList()
+                courseList = zjy.courseInfo()
 
                 if config['saveCookies']:
                     # 获取 Cookies
