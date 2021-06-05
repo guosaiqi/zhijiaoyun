@@ -14,9 +14,8 @@
 1. 食用方式
 ```
         1. 安装包 
-		pip install requests -i https://mirrors.tuna.tsinghua.edu.cn/
-		pip install urllib3 -i https://mirrors.tuna.tsinghua.edu.cn/
-		pip install muggle_ocr -i https://mirrors.tuna.tsinghua.edu.cn/
+		pip install requests -i https://pypi.tuna.tsinghua.edu.cn/simple
+		pip install muggle_ocr -i https://pypi.tuna.tsinghua.edu.cn/simple
 	2. 职教云执行   1.config.yml文件账号配置  2.python main.py
 	3. Mooc学院执行 python mooc.py
 ``` 
