@@ -44,4 +44,5 @@ videoSpeed: 5
 # 保存 Cookies
 # 当登陆成功后，保存 Cookies 到本地，当下次运行时
 # 若 Cookies 有效, 则使用 Cookies 进行登陆
-saveCookies: True
+# True False
+saveCookies: False
