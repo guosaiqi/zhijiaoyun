@@ -1,6 +1,6 @@
 import time
 import random
-
+ 
 class ShuaKe:
     def __init__(self, session, courseOpenId, openClassId, config):
         self.session = session
