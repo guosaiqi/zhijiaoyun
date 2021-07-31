@@ -38,7 +38,7 @@ class Mooc:
             self.whetherNeedPinlun = 1
 
     def getCookie(self):
-        url = 'https://mooc.icve.com.cn/'
+        url = 'https://moocapp.icve.com.cn/'
 
         session.get(url, verify=False)
     
@@ -46,7 +46,7 @@ class Mooc:
     def download_code(self):
         r = random.random()
         
-        url = "https://mooc.icve.com.cn/portal/LoginMooc/getVerifyCode?ts=" + str(r)
+        url = "https://moocapp.icve.com.cn/portal/LoginMooc/getVerifyCode?ts=" + str(r)
 
         res = session.get(url, verify=False)
         
@@ -56,7 +56,7 @@ class Mooc:
             f.write(img)
 
     def login(self):
-        url = 'https://mooc.icve.com.cn/portal/LoginMooc/loginSystem'
+        url = 'https://moocapp.icve.com.cn/portal/LoginMooc/loginSystem'
 
         verifyCode = input("请输入验证码: ")
 
@@ -77,7 +77,7 @@ class Mooc:
             print('登录成功! 欢迎你: ' + self._name)
  
     def courseNeedInfo(self):
-        url = 'https://mooc.icve.com.cn/portal/Course/getMyCourse?isFinished=0&page=1&pageSize={}'.format(20)
+        url = 'https://moocapp.icve.com.cn/portal/Course/getMyCourse?isFinished=0&page=1&pageSize={}'.format(20)
 
         res = json.loads(session.get(url, verify=False).text)
 
@@ -104,7 +104,7 @@ class Mooc:
         self.getProcessList()
         
     def getProcessList(self):
-        url = 'https://mooc.icve.com.cn/study/learn/getProcessList'
+        url = 'https://moocapp.icve.com.cn/study/learn/getProcessList'
 
         data = {
             'courseOpenId': self.courseOpenId
@@ -146,7 +146,7 @@ class Mooc:
             time.sleep(3)
     
     def getTopicId(self, Mlist):
-        url = 'https://mooc.icve.com.cn/study/learn/getTopicByModuleId'
+        url = 'https://moocapp.icve.com.cn/study/learn/getTopicByModuleId'
 
         for moduleInfo in Mlist:
             moduleId = moduleInfo['moduleId']
@@ -189,7 +189,7 @@ class Mooc:
             time.sleep(5)
     
     def getCellId(self, Tlist):
-        url = 'https://mooc.icve.com.cn/study/learn/getCellByTopicId'
+        url = 'https://moocapp.icve.com.cn/study/learn/getCellByTopicId'
 
         for topicInfo in Tlist:
             topicId = topicInfo['topicId']
@@ -399,7 +399,7 @@ class Mooc:
             time.sleep(3)
 
     def getWorkExamData(self, resId):
-        url = 'https://mooc.icve.com.cn/study/workExam/getWorkExamData'
+        url = 'https://moocapp.icve.com.cn/study/workExam/getWorkExamData'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -422,7 +422,7 @@ class Mooc:
 
     def workDetail(self, resId):
        
-        url = 'https://mooc.icve.com.cn/study/workExam/detail'
+        url = 'https://moocapp.icve.com.cn/study/workExam/detail'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -447,7 +447,7 @@ class Mooc:
 
     def ExamHistory(self, resId, studentWorkId, categoryName):
        
-        url = 'https://mooc.icve.com.cn/study/workExam/history'
+        url = 'https://moocapp.icve.com.cn/study/workExam/history'
 
         if categoryName == '测验':
             workExamType = 1
@@ -495,7 +495,7 @@ class Mooc:
         return _list
 
     def workExamPerview(self, resId):
-        url = 'https://mooc.icve.com.cn/study/workExam/workExamPreview'
+        url = 'https://moocapp.icve.com.cn/study/workExam/workExamPreview'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -531,7 +531,7 @@ class Shuake:
 
     def VideoInfo(self):
         self.count = 0
-        url = 'https://mooc.icve.com.cn/study/learn/viewDirectory'
+        url = 'https://moocapp.icve.com.cn/study/learn/viewDirectory'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -556,7 +556,7 @@ class Shuake:
    
     def pptInfo(self):
         self.count = 0
-        url = 'https://mooc.icve.com.cn/study/learn/viewDirectory'
+        url = 'https://moocapp.icve.com.cn/study/learn/viewDirectory'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -580,7 +580,7 @@ class Shuake:
     
     def video(self):
         time.sleep(3)
-        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+        url = 'https://moocapp.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
         data = {
                 'courseId': '',
@@ -627,7 +627,7 @@ class Shuake:
         #     if res['code'] != 1:
         #         print('刷视频出错！')
         #         exit()
-        # url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+        # url = 'https://moocapp.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
         # otherTime = self.VideoTimeLong - self.currentTime
 
@@ -658,7 +658,7 @@ class Shuake:
         #         exit()
 
     def wendang(self):
-        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+        url = 'https://moocapp.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
         data = {
                 'courseId': '',
@@ -681,7 +681,7 @@ class Shuake:
             exit()
 
     def other(self):
-        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+        url = 'https://moocapp.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
         data = {
             'courseId': '',
@@ -699,7 +699,7 @@ class Shuake:
             exit()
 
     def yasuobao(self):
-        url = 'https://mooc.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
+        url = 'https://moocapp.icve.com.cn/study/learn/statStuProcessCellLogAndTimeLong'
 
         data = {
             'courseId': '',
@@ -719,7 +719,7 @@ class Shuake:
 
     def taolun(self, resId):
         self.count = 0
-        url = 'https://mooc.icve.com.cn/study/discussion/addStuViewTopicRemember'
+        url = 'https://moocapp.icve.com.cn/study/discussion/addStuViewTopicRemember'
 
         data = {
             'courseOpenId': self.courseOpenId,
@@ -737,7 +737,7 @@ class Shuake:
     def pinglun(self):
         for i in range(1, 5):
             self.count = 0
-            url = 'https://mooc.icve.com.cn/study/learn/saveAllReply'
+            url = 'https://moocapp.icve.com.cn/study/learn/saveAllReply'
 
             if i == 2:
                 star = 5
@@ -780,7 +780,7 @@ class Shuake:
     def wendangAddTime(self):
         self.count = 0
         time.sleep(3)
-        url = 'https://mooc.icve.com.cn/study/learn/computatlearningTimeLong'
+        url = 'https://moocapp.icve.com.cn/study/learn/computatlearningTimeLong'
 
 
         data = {
@@ -808,7 +808,7 @@ class Shuake:
             questionId = exam['questionId']
             questionType = exam['questionType']
 
-            url = 'https://mooc.icve.com.cn/study/workExam/onlineHomeworkAnswer'
+            url = 'https://moocapp.icve.com.cn/study/workExam/onlineHomeworkAnswer'
 
             data = {
                 'studentWorkId': '',
@@ -834,7 +834,7 @@ class Shuake:
             time.sleep(2)
     
     def zuoyeSubmit(self, uniqueId, workExamId):
-        url = 'https://mooc.icve.com.cn/study/workExam/workExamSave'
+        url = 'https://moocapp.icve.com.cn/study/workExam/workExamSave'
 
         data = {
             'uniqueId': uniqueId,
